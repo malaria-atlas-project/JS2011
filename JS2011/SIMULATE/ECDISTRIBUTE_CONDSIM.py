@@ -11,7 +11,8 @@
 # run ECDISTRIBUTE_CONDSIM r-81f4b0e8 CONDSIM_params_AF_eighteen.py 15
 # python ECDISTRIBUTE_CONDSIM.py r-e1c68088 CONDSIM_params_AS1.py 15
 # python ECDISTRIBUTE_CONDSIM.py r-87c583ee CONDSIM_params_AS2.py 15
-# python ECDISTRIBUTE_CONDSIM.py r-df84c4b6 CONDSIM_params_AM.py 15
+# python ECDISTRIBUTE_CONDSIM.py r-042f3769 CONDSIM_params_EA_one.py 15
+# 
 
 # import libraries
 from map_utils import amazon_ec
@@ -21,11 +22,11 @@ import numpy as np
 import time
 import sys
 
-#RESERVATIONID='r-e1eca288'
-#PARAMFILE_PY='CONDSIM_params_AM.py'
-#PARAMFILE_R=17
-#NINSTANCES=1
-#STAGE = 'BOTH'
+RESERVATIONID='r-042f3769'
+PARAMFILE_PY='CONDSIM_params_EA_one.py'
+PARAMFILE_R=17
+NINSTANCES=1
+STAGE = 'SETUP'
 
 # deal with system arguments (expects two)
 RESERVATIONID = sys.argv[1]  ## defines ID of reservation that contains the instances we will use on EC2
@@ -35,9 +36,9 @@ NINSTANCES = int(sys.argv[4])
 STAGE = sys.argv[5]
 
 # initialise amazon S3 key object 
-S=S3(keyPath='/home/pwg/mbg-world/mbgw-scripts/s3code.txt')
+S=S3(keyPath='/home/pwg/data/PWG/JS2011/codelibraries/JS2011/JS2011/s3code.txt')
 
-STDOUTPATH = '/home/pwg/mbg-world/stdout_CONDSIM/DistributedOutputSTDOUTERR_'+str(PARAMFILE_PY.partition('.')[0])+'_'+str(time.ctime())+'/'
+STDOUTPATH = '/home/pwg/data/PWG/JS2011/stdout_CONDSIM/DistributedOutputSTDOUTERR_'+str(PARAMFILE_PY.partition('.')[0])+'_'+str(time.ctime())+'/'
 checkAndBuildPaths(STDOUTPATH,VERBOSE=True,BUILD=True)
 
 if ((STAGE=='SETUP') | (STAGE == 'ALL')):
@@ -48,9 +49,12 @@ if ((STAGE=='SETUP') | (STAGE == 'ALL')):
     print '*******************************\n'
     MAXJOBSPERINSTANCE = 1
     MAXJOBTRIES = 2 #maximum number of tries before we give up on any individual job
-    UPLOADFILES=['/home/pwg/mbg-world/mbgw-scripts/cloud_setup.sh','/home/pwg/mbg-world/mbgw-scripts/s3code.txt']
+    UPLOADFILES=['/home/pwg/data/PWG/JS2011/codelibraries/JS2011/JS2011/cloud_setup.sh','/home/pwg/data/PWG/JS2011/codelibraries/JS2011/JS2011/s3code.txt']
     INITCMDS=[]
     CMDS=[]
+    returns = amazon_ec.map_jobs(RESERVATIONID,NINSTANCES,MAXJOBSPERINSTANCE,MAXJOBTRIES,cmds=CMDS, init_cmds=INITCMDS,upload_files=UPLOADFILES, interval=20,shutdown=False,STDOUTPATH=STDOUTPATH)    
+    UPLOADFILES=[]
+    CMDS=['mv /root/cloud_setup.sh /mnt/pwg/cloud_setup.sh; mv /root/s3code.txt /mnt/pwg/s3code.txt']
     returns = amazon_ec.map_jobs(RESERVATIONID,NINSTANCES,MAXJOBSPERINSTANCE,MAXJOBTRIES,cmds=CMDS, init_cmds=INITCMDS,upload_files=UPLOADFILES, interval=20,shutdown=False,STDOUTPATH=STDOUTPATH)    
     print '\n*******************************'
     print 'FINISHED UPLOADING FILES TO INSTANCES..'
@@ -65,9 +69,9 @@ if ((STAGE=='SETUP') | (STAGE == 'ALL')):
     MAXJOBTRIES = 2 #maximum number of tries before we give up on any individual job
     UPLOADFILES=[]
     INITCMDS=[]
-    CMDS = ['bash /root/cloud_setup.sh',]*NINSTANCES
+    CMDS = ['bash /mnt/pwg/cloud_setup.sh',]*NINSTANCES
     returns = amazon_ec.map_jobs(RESERVATIONID,NINSTANCES,MAXJOBSPERINSTANCE,MAXJOBTRIES,cmds=CMDS, init_cmds=INITCMDS,upload_files=UPLOADFILES, interval=20,shutdown=False,STDOUTPATH=STDOUTPATH)
-    CMDS = ['"cd /root/mbg-world/mbgw/joint_simulation/CONDSIMalgorithm/;python CONDSIM_defineParameterFile.py '+str(PARAMFILE_PY)+';python ECRUNSCRIPT_CONDSIM_PREDOWNLOAD.py; python test_instance_setup.py"',]*NINSTANCES
+    CMDS = ['"cd /mnt/pwg/mbg-world/mbgw/joint_simulation/CONDSIMalgorithm/;python CONDSIM_defineParameterFile.py '+str(PARAMFILE_PY)+';python ECRUNSCRIPT_CONDSIM_PREDOWNLOAD.py; python test_instance_setup.py"',]*NINSTANCES
     returns = amazon_ec.map_jobs(RESERVATIONID,NINSTANCES,MAXJOBSPERINSTANCE,MAXJOBTRIES,cmds=CMDS, init_cmds=INITCMDS,upload_files=UPLOADFILES, interval=20,shutdown=False,STDOUTPATH=STDOUTPATH)  
     print '\n*******************************'
     print 'FINISHED EXECUTING INITILISATION COMMANDS ON INSTANCES..'
