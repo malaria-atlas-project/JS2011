@@ -13,7 +13,7 @@ config = Configuration('JS2011',parent_package=None,top_path=None)
 if __name__ == '__main__':
     from numpy.distutils.core import setup
     setup(  version="0.1",
-            description="The Malaria Atlas Project's utility functions.",
+            description="The Malaria Atlas Project's joint simulation functions.",
             author="Peter Gething and Anand Patil", 
             author_email="map@map.ox.ac.uk",
             url="www.map.ox.ac.uk",
